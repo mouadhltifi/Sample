@@ -1,0 +1,28 @@
+try {
+            conn.setAutoCommit(false);
+            preparedStatement = conn.prepareStatement(query, Statement.RETURN_GENERATED_KEYS);
+            preparedStatement.setDate(1, calculateShippingDate());
+            preparedStatement.setDouble(2, purchasedCart.getTotalPrice() + purchasedCart.getShippingPrice());
+            preparedStatement.setString(3, user.getAddress());
+            preparedStatement.setInt(4, purchasedCart.getSeller().getSellerId());
+            preparedStatement.setInt(5, user.getUserId());
+
+            preparedStatement.executeUpdate();
+
+            resultSet = preparedStatement.getGeneratedKeys();
+
+            if(resultSet.next()) {
+                long id = resultSet.getLong(1);
+                System.out.println("key value " + id);
+
+                //2nd insert
+
+                for (LightItem item :purchasedCart.getItem()
+                ) {
+                    //seconda query
+                    insertItems(item, user, (int) id);
+                }
+            }else throw new IllegalArgumentException("resulset key is null");
+
+            conn.commit();
+            return true;
